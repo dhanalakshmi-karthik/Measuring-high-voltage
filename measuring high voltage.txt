@@ -1,0 +1,31 @@
+#include <xc.h>
+#define _XTAL_FREQ 20000000  // Define the system frequency
+
+void ADC_Init(){
+    ADCON0 = 0x41;  // Turn on ADC and select AN0 channel
+    ADCON1 = 0xC0;  // Configure pin as analog and select the result format
+}
+
+unsigned int ADC_Read(unsigned char channel){
+    ADCON0 &= 0xC5;  // Clear the channel selection bits
+    ADCON0 |= channel << 3;  // Select the required channel
+    __delay_ms(2);  // Acquisition time to charge the hold capacitor
+    GO_nDONE = 1;  // Initiate conversion
+    while(GO_nDONE);  // Wait for conversion to complete
+    return ((ADRESH << 8) + ADRESL);  // Return the 10-bit ADC result
+}
+
+void main(void) {
+    unsigned int adc_value;
+    float voltage;
+    TRISA = 0xFF;  // Set all Port A pins as input
+    ADC_Init();  // Initialize the ADC module
+    
+    while(1){
+        adc_value = ADC_Read(0);  // Read the ADC value from channel 0
+        voltage = (adc_value * 5.0) / 1023.0;  // Convert ADC value to voltage
+        voltage = voltage * (100.0 / 5.0);  // Scale voltage to 0-100V
+        
+        // Code to display voltage on LCD or send via serial communication
+    }
+}
